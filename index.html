@@ -3,248 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gully Cricket Scorer - 2 Innings</title>
+    <title>Gully Cricket Scorer Pro</title>
     <style>
         :root {
-            --primary: #0d47a1;
-            --secondary: #b71c1c;
-            --accent: #2e7d32;
-            --bg: #f0f2f5;
+            --primary: #1565c0;
+            --four: #ffeb3b;
+            --six: #ff9800;
+            --wicket: #d32f2f;
+            --extra: #4caf50;
+            --bg: #f4f7f6;
         }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg);
-            display: flex;
-            justify-content: center;
-            padding: 20px 0;
-            margin: 0;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .card { background: white; width: 100%; max-width: 450px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 15px; }
+        
+        /* Team Names */
+        .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        .team-name { border: none; font-weight: bold; font-size: 1.1rem; width: 40%; text-align: center; color: #333; }
 
-        .calculator-card {
-            background: white;
-            width: 95%;
-            max-width: 450px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            padding: 20px;
-        }
+        /* Main Score Area */
+        .score-box { background: var(--primary); color: white; border-radius: 15px; padding: 20px; text-align: center; position: relative; }
+        .score-box h1 { font-size: 4rem; margin: 0; line-height: 1; }
+        .overs-text { font-size: 1.2rem; margin: 10px 0; opacity: 0.9; }
+        .runrates { display: flex; justify-content: space-around; font-size: 0.9rem; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px; }
 
-        .match-header {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-bottom: 15px;
-        }
+        /* Target & Need */
+        .target-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .target-box { padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; background: #fffde7; border: 1px solid #fbc02d; }
 
-        .team-input {
-            border: none;
-            border-bottom: 2px solid #ccc;
-            font-size: 1rem;
-            font-weight: bold;
-            text-align: center;
-            width: 40%;
-            padding: 5px;
-        }
+        /* History Boxes (Over-by-Over) */
+        .history-container { margin-bottom: 15px; }
+        .over-row { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 8px; padding: 8px; display: flex; align-items: center; gap: 8px; overflow-x: auto; }
+        .over-label { font-weight: bold; min-width: 60px; font-size: 0.8rem; color: #666; border-right: 1px solid #eee; padding-right: 5px; }
+        .ball { min-width: 28px; height: 28px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; }
+        .b-4 { background: var(--four); color: black; }
+        .b-6 { background: var(--six); color: white; }
+        .b-w { background: var(--wicket); color: white; }
+        .b-ex { background: var(--extra); color: white; }
 
-        .score-box {
-            background: linear-gradient(135deg, var(--primary), #1976d2);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .score-box h1 { font-size: 3.5rem; margin: 10px 0; }
-        .badge { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
-
-        .target-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .info-card {
-            background: #fff9c4;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            border: 1px solid #fbc02d;
-        }
-
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-
-        button {
-            padding: 15px 5px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-run { background: #eeeeee; }
-        .btn-bound { background: #ffd600; }
-        .btn-extra { background: #ff9100; color: white; }
-        .btn-wicket { background: var(--secondary); color: white; grid-column: span 2; }
-        .btn-undo { background: #607d8b; color: white; grid-column: span 2; }
-        .btn-switch { background: var(--accent); color: white; grid-column: span 4; margin-top: 10px; }
-
-        .history-section {
-            margin-top: 20px;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
-
-        .ball-trail {
-            display: flex;
-            gap: 5px;
-            overflow-x: auto;
-            padding: 10px 0;
-            flex-direction: row-reverse;
-        }
-
-        .ball {
-            min-width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .w { background: var(--secondary); color: white; }
-        .ex { background: var(--accent); color: white; }
+        /* Buttons */
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        button { padding: 15px 5px; border: none; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .btn-gray { background: #e0e0e0; }
+        .btn-4 { background: var(--four); }
+        .btn-6 { background: var(--six); color: white; }
+        .btn-wd { background: #f57c00; color: white; }
+        .btn-wicket { background: var(--wicket); color: white; grid-column: span 2; }
+        .btn-undo { background: #78909c; color: white; grid-column: span 2; }
+        .btn-reset { background: #2e7d32; color: white; grid-column: span 4; margin-top: 10px; padding: 12px; }
     </style>
 </head>
 <body>
 
-<div class="calculator-card">
+<div class="card">
     <div class="match-header">
-        <input type="text" id="t1" class="team-input" value="TEAM A">
-        <span>VS</span>
-        <input type="text" id="t2" class="team-input" value="TEAM B">
+        <input type="text" class="team-name" value="TEAM A">
+        <span style="color:#999; font-weight:bold">VS</span>
+        <input type="text" class="team-name" value="TEAM B">
     </div>
 
     <div class="score-box">
-        <span class="badge" id="innings-label">1ST INNINGS</span>
+        <div id="innings-tag" style="font-size: 0.8rem; background:rgba(0,0,0,0.2); display:inline-block; padding:2px 10px; border-radius:10px; margin-bottom:5px">1ST INNINGS</div>
         <h1 id="main-score">0 - 0</h1>
-        <p>Overs: <span id="display-overs">0.0</span></p>
-    </div>
-
-    <div class="target-info" id="target-ui" style="display: none;">
-        <div class="info-card">Target: <span id="val-target">0</span></div>
-        <div class="info-card" style="background: #e1f5fe; border-color: #03a9f4;">
-            Need: <span id="val-need">0</span>
+        <div class="overs-text">Overs: <span id="overs">0.0</span></div>
+        <div class="runrates">
+            <span>CRR: <b id="crr">0.00</b></span>
+            <span id="rrr-wrap" style="display:none">RRR: <b id="rrr">0.00</b></span>
         </div>
     </div>
 
-    <div class="controls">
-        <button class="btn-run" onclick="addRun(0)">0</button>
-        <button class="btn-run" onclick="addRun(1)">1</button>
-        <button class="btn-run" onclick="addRun(2)">2</button>
-        <button class="btn-run" onclick="addRun(3)">3</button>
-        <button class="btn-bound" onclick="addRun(4)">4</button>
-        <button class="btn-bound" onclick="addRun(6)">6</button>
-        <button class="btn-extra" onclick="addExtra('WD')">WD</button>
-        <button class="btn-extra" onclick="addExtra('NB')">NB</button>
-        <button class="btn-wicket" onclick="wicket()">WICKET</button>
-        <button class="btn-undo" onclick="undo()">UNDO</button>
-        <button class="btn-switch" id="switch-btn" onclick="switchInnings()">START 2ND INNINGS</button>
+    <div class="target-container" id="target-ui" style="display:none">
+        <div class="target-box" style="background: #fff9c4;">Target: <span id="target-val">0</span></div>
+        <div class="target-box" style="background: #e3f2fd; border-color: #2196f3;">Need: <span id="need-val">0</span></div>
     </div>
 
-    <div class="history-section">
-        <strong>Ball History:</strong>
-        <div class="ball-trail" id="ball-log"></div>
+    <div id="over-history" class="history-container">
+        </div>
+
+    <div class="controls">
+        <button class="btn-gray" onclick="addRun(0)">0</button>
+        <button class="btn-gray" onclick="addRun(1)">1</button>
+        <button class="btn-gray" onclick="addRun(2)">2</button>
+        <button class="btn-gray" onclick="addRun(3)">3</button>
+        <button class="btn-4" onclick="addRun(4)">4</button>
+        <button class="btn-6" onclick="addRun(6)">6</button>
+        <button class="btn-wd" onclick="addExtra('WD')">WD</button>
+        <button class="btn-wd" onclick="addExtra('NB')">NB</button>
+        <button class="btn-wicket" onclick="takeWicket()">WICKET</button>
+        <button class="btn-undo" onclick="undo()">UNDO</button>
+        <button class="btn-reset" id="action-btn" onclick="nextInnings()">START 2ND INNINGS</button>
     </div>
 </div>
 
 <script>
-    let score = 0, wickets = 0, balls = 0;
-    let innings = 1;
-    let target = 0;
-    let history = [];
+    let score = 0, wickets = 0, balls = 0, target = 0, innings = 1;
+    let history = []; 
+    let overBalls = []; // Current over history
 
-    function updateUI() {
+    function updateDisplay() {
         document.getElementById('main-score').innerText = `${score} - ${wickets}`;
-        document.getElementById('display-overs').innerText = Math.floor(balls/6) + "." + (balls%6);
-        
+        let fullOvers = Math.floor(balls / 6);
+        let currentOverBall = balls % 6;
+        document.getElementById('overs').innerText = `${fullOvers}.${currentOverBall}`;
+
+        // CRR Calculation
+        let crr = balls > 0 ? (score / (balls / 6)).toFixed(2) : "0.00";
+        document.getElementById('crr').innerText = crr;
+
+        // RRR and Target Logic
         if (innings === 2) {
+            let remainingBalls = 30 - balls; // Assuming 5 over game for example, adjust as needed
             let need = target - score;
-            document.getElementById('val-need').innerText = need < 0 ? "Target Reached" : need;
-            if (need <= 0) alert("BATTING TEAM WON!");
+            document.getElementById('need-val').innerText = need > 0 ? need : "Won";
+            
+            let rrr = remainingBalls > 0 ? ((need / remainingBalls) * 6).toFixed(2) : "0.00";
+            document.getElementById('rrr').innerText = rrr;
         }
     }
 
     function addRun(r) {
-        save();
+        saveState();
         score += r;
         balls++;
-        log(r, "");
-        updateUI();
+        updateOverHistory(r);
+        updateDisplay();
     }
 
     function addExtra(type) {
-        save();
+        saveState();
         score += 1;
-        log(type, "ex");
-        updateUI();
+        updateOverHistory(type);
+        updateDisplay();
     }
 
-    function wicket() {
-        if (wickets < 10) {
-            save();
-            wickets++;
-            balls++;
-            log("W", "w");
-            updateUI();
+    function takeWicket() {
+        saveState();
+        wickets++;
+        balls++;
+        updateOverHistory('W');
+        updateDisplay();
+    }
+
+    function updateOverHistory(val) {
+        let currentOverIndex = Math.floor((balls - (val === 'WD' || val === 'NB' ? 1 : 1)) / 6);
+        if (val === 'WD' || val === 'NB') {
+            // Extras don't advance the ball count for history box logic
+            currentOverIndex = Math.floor((balls) / 6);
         }
+
+        let container = document.getElementById('over-history');
+        let overId = `over-${currentOverIndex}`;
+        let overBox = document.getElementById(overId);
+
+        if (!overBox) {
+            overBox = document.createElement('div');
+            overBox.className = 'over-row';
+            overBox.id = overId;
+            overBox.innerHTML = `<div class="over-label">Over ${currentOverIndex + 1}</div>`;
+            container.prepend(overBox); // New over at top
+        }
+
+        let ballDiv = document.createElement('div');
+        ballDiv.className = 'ball';
+        if (val === 4) ballDiv.classList.add('b-4');
+        if (val === 6) ballDiv.classList.add('b-6');
+        if (val === 'W') ballDiv.classList.add('b-w');
+        if (val === 'WD' || val === 'NB') ballDiv.classList.add('b-ex');
+        
+        ballDiv.innerText = val;
+        overBox.appendChild(ballDiv);
     }
 
-    function switchInnings() {
+    function nextInnings() {
         if (innings === 1) {
             target = score + 1;
             innings = 2;
             score = 0; wickets = 0; balls = 0;
-            document.getElementById('innings-label').innerText = "2ND INNINGS";
+            document.getElementById('over-history').innerHTML = "";
             document.getElementById('target-ui').style.display = "grid";
-            document.getElementById('val-target').innerText = target;
-            document.getElementById('switch-btn').innerText = "RESET MATCH";
-            document.getElementById('ball-log').innerHTML = "";
-            updateUI();
+            document.getElementById('rrr-wrap').style.display = "inline";
+            document.getElementById('target-val').innerText = target;
+            document.getElementById('innings-tag').innerText = "2ND INNINGS";
+            document.getElementById('action-btn').innerText = "RESET MATCH";
+            updateDisplay();
         } else {
-            location.reload(); // Simple reset
+            if(confirm("New match suru garne ho?")) location.reload();
         }
     }
 
-    function log(val, cls) {
-        const div = document.createElement('div');
-        div.className = `ball ${cls}`;
-        div.innerText = val;
-        document.getElementById('ball-log').appendChild(div);
-    }
-
-    function save() {
-        history.push({s: score, w: wickets, b: balls, html: document.getElementById('ball-log').innerHTML});
+    function saveState() {
+        history.push({
+            score, wickets, balls, 
+            historyHTML: document.getElementById('over-history').innerHTML
+        });
     }
 
     function undo() {
         if (history.length > 0) {
             let last = history.pop();
-            score = last.s; wickets = last.w; balls = last.b;
-            document.getElementById('ball-log').innerHTML = last.html;
-            updateUI();
+            score = last.score;
+            wickets = last.wickets;
+            balls = last.balls;
+            document.getElementById('over-history').innerHTML = last.historyHTML;
+            updateDisplay();
         }
     }
 </script>
