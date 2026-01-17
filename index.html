@@ -3,200 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cricket Scorer - Quick Start</title>
+    <title>Cricket Scorer Pro - Fixed</title>
     <style>
-        :root { --p: #1a237e; --s: #ffd600; --bg: #f0f2f5; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .card { width: 100%; max-width: 450px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); min-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+        :root { --p: #1a237e; --s: #ffd600; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .card { width: 100%; max-width: 480px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-height: 95vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        #setup-screen, #bowler-change-screen { position: fixed; inset: 0; background: white; z-index: 2000; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        #bowler-change-screen { background: rgba(0,0,0,0.9); display: none; color: white; justify-content: center; }
+        #setup-modal, #bowler-modal, #final-summary { position: fixed; inset: 0; background: white; z-index: 2000; padding: 25px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        #bowler-modal { background: rgba(0,0,0,0.85); display: none; color: white; justify-content: center; z-index: 2500; }
+        .modal-inner { background: white; color: black; padding: 20px; border-radius: 15px; text-align: center; width: 85%; }
 
-        .header { background: var(--p); color: white; padding: 15px; text-align: center; }
-        .score-val { font-size: 3rem; font-weight: bold; margin: 5px 0; }
-        
-        .players-live { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #e8eaf6; border-radius: 8px; margin: 10px; }
-        .active-p { border-left: 4px solid var(--p); padding-left: 8px; font-weight: bold; }
+        .header { background: var(--p); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--s); }
+        .score-val { font-size: 3.5rem; font-weight: bold; margin: 5px 0; }
+        .target-box { background: var(--s); color: black; padding: 5px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
 
-        .tables-area { flex-grow: 1; padding: 10px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 15px; }
-        th { text-align: left; background: #eee; padding: 8px; }
-        td { padding: 8px; border-bottom: 1px solid #ddd; }
+        .live-players { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #e8eaf6; margin: 10px; border-radius: 10px; }
+        .active-p { border-left: 4px solid var(--p); padding-left: 8px; font-weight: bold; color: var(--p); }
 
-        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; background: #ddd; }
-        button { padding: 15px 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .btn-run { background: white; }
-        .btn-extra { background: #ffecb3; }
-        .btn-w { background: #f44336; color: white; grid-column: span 2; }
-        .btn-start { background: var(--p); color: white; padding: 15px; font-size: 1.2rem; }
-        
-        .bowler-list-item { background: white; color: black; padding: 12px; margin: 5px; border-radius: 5px; text-align: center; }
+        .content { flex-grow: 1; padding: 10px 15px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 20px; }
+        th { text-align: left; background: #f2f2f2; padding: 10px; border-bottom: 2px solid #ddd; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 15px; background: #f9f9f9; border-top: 1px solid #ddd; }
+        button { padding: 15px 5px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-n { background: white; border: 1px solid #ddd; }
+        .btn-s { background: var(--s); }
+        .btn-w { background: #d32f2f; color: white; grid-column: span 2; }
+        .btn-action { background: var(--p); color: white; grid-column: span 4; padding: 18px; }
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<div id="setup-screen">
-    <h2 style="color:var(--p)">🏏 Cricket Setup</h2>
-    <input type="text" id="teamA" placeholder="Batting Team" value="Nepal">
-    <input type="text" id="teamB" placeholder="Bowling Team" value="India">
+<div id="setup-modal">
+    <h2 style="color:var(--p)">🏏 Match Setup</h2>
+    <div id="team-input-div">
+        <input type="text" id="tA" placeholder="Team 1 Name" value="Nepal">
+        <input type="text" id="tB" placeholder="Team 2 Name" value="India">
+        <select id="toss_win"><option value="1">Team 1 won Toss</option><option value="2">Team 2 won Toss</option></select>
+        <select id="toss_dec"><option value="bat">Batting First</option><option value="bowl">Bowling First</option></select>
+    </div>
     <hr>
-    <input type="text" id="bat1" placeholder="Striker Name" value="Batsman 1">
-    <input type="text" id="bat2" placeholder="Non-Striker Name" value="Batsman 2">
-    <input type="text" id="bowl1" placeholder="Bowler Name" value="Bowler 1">
-    <button class="btn-start" onclick="initMatch()">PLAY NOW</button>
+    <input type="text" id="s1" placeholder="Striker Name">
+    <input type="text" id="s2" placeholder="Non-Striker Name">
+    <input type="text" id="bw1" placeholder="Bowler Name">
+    <button class="btn-action" onclick="startMatch()">START INNINGS</button>
 </div>
 
-<div id="bowler-change-screen">
-    <div style="background:white; padding:20px; border-radius:10px; color:black; text-align:center;">
-        <h3>Select Next Bowler</h3>
-        <div id="past-bowlers"></div>
-        <input type="text" id="new-bw-name" placeholder="New Bowler Name" style="width:80%; padding:10px; margin:10px 0;">
-        <button onclick="changeBowler(document.getElementById('new-bw-name').value)" style="background:var(--p); color:white; padding:10px; width:85%;">ADD NEW</button>
+<div id="bowler-modal">
+    <div class="modal-inner">
+        <h3>Change Bowler</h3>
+        <p style="font-size:0.8rem; color:red;">*Pahilo bowler le lagatar falna paudena</p>
+        <div id="bw-list" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:15px 0;"></div>
+        <input type="text" id="new_bw_inp" placeholder="New Bowler Name" style="margin-bottom:10px;">
+        <button onclick="setBowler(document.getElementById('new_bw_inp').value)" class="btn-action">SELECT / ADD</button>
     </div>
 </div>
 
 <div class="card">
     <div class="header">
-        <div id="ui-batting-team">TEAM</div>
+        <div id="ui-team" style="font-size: 1.1rem; opacity: 0.9;">TEAM NAME</div>
         <div class="score-val" id="ui-score">0 - 0</div>
         <div id="ui-overs">Overs: 0.0</div>
+        <div id="ui-target-box" style="display:none; margin-top:10px;">
+            <span class="target-box" id="ui-target">Target: 0</span>
+        </div>
     </div>
 
-    <div class="players-live">
-        <div id="ui-s-box" class="active-p">S: <span id="ui-s-nm">-</span><br><b id="ui-s-r">0</b>(<span id="ui-s-b">0</span>)</div>
-        <div id="ui-ns-box">NS: <span id="ui-ns-nm">-</span><br><b id="ui-ns-r">0</b>(<span id="ui-ns-b">0</span>)</div>
+    <div class="live-players">
+        <div id="box-s" class="active-p">S: <span id="ui-s-nm">-</span><br><b id="ui-s-r">0</b>(<span id="ui-s-b">0</span>)</div>
+        <div id="box-ns">NS: <span id="ui-ns-nm">-</span><br><b id="ui-ns-r">0</b>(<span id="ui-ns-b">0</span>)</div>
     </div>
-    <div style="padding: 0 15px; font-size: 0.9rem;">Bowler: <b id="ui-bw-nm">-</b></div>
+    <div style="padding: 0 15px; font-size: 0.9rem; color: #555;">Current Bowler: <b id="ui-bw-nm">-</b></div>
 
-    <div class="tables-area">
+    <div class="content">
         <h4>Batsmen</h4>
-        <table id="bat-table"><thead><tr><th>Name</th><th>R</th><th>B</th></tr></thead><tbody></tbody></table>
-        
-        <h4>Bowlers (Live Stats)</h4>
-        <table id="bwl-table"><thead><tr><th>Name</th><th>O</th><th>R</th><th>W</th></tr></thead><tbody></tbody></table>
+        <table id="tbl-bat"><thead><tr><th>Name</th><th>R</th><th>B</th><th>SR</th></tr></thead><tbody></tbody></table>
+        <h4>Bowlers</h4>
+        <table id="tbl-bwl"><thead><tr><th>Name</th><th>O</th><th>R</th><th>W</th></tr></thead><tbody></tbody></table>
     </div>
 
     <div class="controls">
-        <button class="btn-run" onclick="run(0)">0</button>
-        <button class="btn-run" onclick="run(1)">1</button>
-        <button class="btn-run" onclick="run(2)">2</button>
-        <button class="btn-run" onclick="run(3)">3</button>
-        <button class="btn-run" style="background:#fff176" onclick="run(4)">4</button>
-        <button class="btn-run" style="background:#ffb300" onclick="run(6)">6</button>
-        <button class="btn-extra" onclick="extra()">WD/NB</button>
+        <button class="btn-n" onclick="addRun(0)">0</button>
+        <button class="btn-n" onclick="addRun(1)">1</button>
+        <button class="btn-n" onclick="addRun(2)">2</button>
+        <button class="btn-n" onclick="addRun(3)">3</button>
+        <button class="btn-s" onclick="addRun(4)">4</button>
+        <button class="btn-s" style="background:#ff9800;color:white;" onclick="addRun(6)">6</button>
+        <button class="btn-n" style="background:#ffccbc" onclick="addExtra()">WD/NB</button>
         <button class="btn-w" onclick="wicket()">WICKET</button>
-        <button class="btn-start" style="grid-column: span 4;" onclick="location.reload()">RESTART</button>
+        <button class="btn-action" onclick="confirmFinish()">FINISH INNINGS</button>
     </div>
 </div>
 
 <script>
-    let state = {
-        batTeam: "", bowlTeam: "", score: 0, wickets: 0, balls: 0,
-        striker: "", nonStriker: "", bowler: "",
-        batStats: {}, bwlStats: {}, bowlerList: []
+    let m = {
+        teams: [], batting: "", score: 0, wickets: 0, balls: 0,
+        striker: "", nonStriker: "", bowler: "", lastBowler: "",
+        stats: { bat: {}, bwl: {} },
+        inn: 1, target: 0
     };
 
-    function initMatch() {
-        state.batTeam = document.getElementById('teamA').value;
-        state.bowlTeam = document.getElementById('teamB').value;
-        state.striker = document.getElementById('bat1').value;
-        state.nonStriker = document.getElementById('bat2').value;
-        state.bowler = document.getElementById('bowl1').value;
+    function startMatch() {
+        if(m.inn === 1) {
+            const t1 = document.getElementById('tA').value || "Team 1";
+            const t2 = document.getElementById('tB').value || "Team 2";
+            m.teams = [t1, t2];
+            const toss = document.getElementById('toss_win').value;
+            const choice = document.getElementById('toss_dec').value;
+            m.batting = (toss == "1") ? (choice == 'bat' ? t1 : t2) : (choice == 'bat' ? t2 : t1);
+        }
+        
+        m.striker = document.getElementById('s1').value || "Bat 1";
+        m.nonStriker = document.getElementById('s2').value || "Bat 2";
+        const bwl = document.getElementById('bw1').value || "Bowler 1";
 
-        regBat(state.striker); regBat(state.nonStriker);
-        changeBowler(state.bowler);
+        regP(m.striker, 'bat'); regP(m.nonStriker, 'bat');
+        setBowler(bwl);
 
-        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('setup-modal').style.display = 'none';
         updateUI();
     }
 
-    function regBat(n) { if(!state.batStats[n]) state.batStats[n] = {r:0, b:0}; }
-    function regBwl(n) { 
-        if(!state.bwlStats[n]) {
-            state.bwlStats[n] = {o:0, r:0, w:0};
-            state.bowlerList.push(n);
+    function regP(n, type) {
+        if(type === 'bat' && !m.stats.bat[n]) m.stats.bat[n] = {r:0, b:0, team: m.batting, inn: m.inn};
+        if(type === 'bwl' && !m.stats.bwl[n]) {
+            let bTeam = m.teams.find(t => t !== m.batting);
+            m.stats.bwl[n] = {r:0, b:0, w:0, team: bTeam, inn: m.inn};
         }
     }
 
-    function run(r) {
-        state.score += r; state.balls++;
-        state.batStats[state.striker].r += r;
-        state.batStats[state.striker].b++;
-        state.bwlStats[state.bowler].r += r;
-        state.bwlStats[state.bowler].o++;
+    function setBowler(n) {
+        if(!n || n === m.lastBowler) { alert("Yo bowler le lagatar over falna paudena!"); return; }
+        m.bowler = n;
+        regP(n, 'bwl');
+        document.getElementById('bowler-modal').style.display = 'none';
+        document.getElementById('new_bw_inp').value = "";
+        updateUI();
+    }
+
+    function addRun(r) {
+        m.score += r; m.balls++;
+        m.stats.bat[m.striker].r += r; m.stats.bat[m.striker].b++;
+        m.stats.bwl[m.bowler].r += r; m.stats.bwl[m.bowler].b++;
 
         if(r % 2 !== 0) swap();
-        if(state.balls % 6 === 0) showBowlerChange();
+        if(m.balls % 6 === 0) overEnd();
+        checkResult();
         updateUI();
     }
 
-    function extra() {
-        state.score += 1;
-        state.bwlStats[state.bowler].r += 1;
+    function addExtra() {
+        m.score += 1; m.stats.bwl[m.bowler].r += 1;
         updateUI();
     }
 
-    function swap() { let t = state.striker; state.striker = state.nonStriker; state.nonStriker = t; }
+    function swap() { [m.striker, m.nonStriker] = [m.nonStriker, m.striker]; }
 
-    function showBowlerChange() {
+    function overEnd() {
+        m.lastBowler = m.bowler;
         swap(); updateUI();
-        let div = document.getElementById('past-bowlers');
-        div.innerHTML = "";
-        state.bowlerList.forEach(name => {
-            let b = document.createElement('div');
-            b.className = "bowler-list-item";
-            b.innerText = name;
-            b.onclick = () => changeBowler(name);
-            div.appendChild(b);
+        let list = document.getElementById('bw-list');
+        list.innerHTML = "";
+        let bTeam = m.teams.find(t => t !== m.batting);
+        
+        Object.keys(m.stats.bwl).forEach(name => {
+            if(m.stats.bwl[name].team === bTeam) {
+                let btn = document.createElement('button');
+                btn.innerText = name;
+                btn.disabled = (name === m.lastBowler);
+                btn.style = `padding:10px; border-radius:5px; border:none; ${btn.disabled?'background:#ccc':'background:#eee;cursor:pointer'}`;
+                btn.onclick = () => setBowler(name);
+                list.appendChild(btn);
+            }
         });
-        document.getElementById('bowler-change-screen').style.display = 'flex';
-    }
-
-    function changeBowler(n) {
-        if(!n) return;
-        state.bowler = n;
-        regBwl(n);
-        document.getElementById('bowler-change-screen').style.display = 'none';
-        document.getElementById('new-bw-name').value = "";
-        updateUI();
+        document.getElementById('bowler-modal').style.display = 'flex';
     }
 
     function wicket() {
-        state.wickets++; state.balls++;
-        state.batStats[state.striker].b++;
-        state.bwlStats[state.bowler].w++;
-        state.bwlStats[state.bowler].o++;
+        m.wickets++; m.balls++;
+        m.stats.bat[m.striker].b++; m.stats.bwl[m.bowler].w++; m.stats.bwl[m.bowler].b++;
         updateUI();
-        if(state.wickets < 10) {
+        if(m.wickets < 10) {
             let n = prompt("New Batsman Name:");
-            if(n) { state.striker = n; regBat(n); }
-        } else { alert("All Out!"); location.reload(); }
-        if(state.balls % 6 === 0) showBowlerChange();
+            if(n) { m.striker = n; regP(n, 'bat'); }
+        } else { confirmFinish(); }
+        if(m.balls % 6 === 0 && m.wickets < 10) overEnd();
         updateUI();
     }
 
     function updateUI() {
-        document.getElementById('ui-batting-team').innerText = state.batTeam;
-        document.getElementById('ui-score').innerText = state.score + " - " + state.wickets;
-        document.getElementById('ui-overs').innerText = "Overs: " + Math.floor(state.balls/6) + "." + (state.balls%6);
-        document.getElementById('ui-s-nm').innerText = state.striker;
-        document.getElementById('ui-s-r').innerText = state.batStats[state.striker].r;
-        document.getElementById('ui-s-b').innerText = state.batStats[state.striker].b;
-        document.getElementById('ui-ns-nm').innerText = state.nonStriker;
-        document.getElementById('ui-ns-r').innerText = state.batStats[state.nonStriker].r;
-        document.getElementById('ui-ns-b').innerText = state.batStats[state.nonStriker].b;
-        document.getElementById('ui-bw-nm').innerText = state.bowler;
+        document.getElementById('ui-team').innerText = m.batting.toUpperCase() + (m.inn==1?" (1ST INN)":" (2ND INN)");
+        document.getElementById('ui-score').innerText = `${m.score} - ${m.wickets}`;
+        document.getElementById('ui-overs').innerText = `Overs: ${Math.floor(m.balls/6)}.${m.balls%6}`;
+        document.getElementById('ui-s-nm').innerText = m.striker;
+        document.getElementById('ui-s-r').innerText = m.stats.bat[m.striker].r;
+        document.getElementById('ui-s-b').innerText = m.stats.bat[m.striker].b;
+        document.getElementById('ui-ns-nm').innerText = m.nonStriker;
+        document.getElementById('ui-ns-r').innerText = m.stats.bat[m.nonStriker].r;
+        document.getElementById('ui-ns-b').innerText = m.stats.bat[m.nonStriker].b;
+        document.getElementById('ui-bw-nm').innerText = m.bowler;
 
-        let bHtml = "";
-        for(let p in state.batStats) bHtml += `<tr><td>${p}</td><td>${state.batStats[p].r}</td><td>${state.batStats[p].b}</td></tr>`;
-        document.querySelector('#bat-table tbody').innerHTML = bHtml;
-
-        let boHtml = "";
-        for(let p in state.bwlStats) {
-            let b = state.bwlStats[p];
-            boHtml += `<tr><td>${p}</td><td>${Math.floor(b.o/6)}.${b.o%6}</td><td>${b.r}</td><td>${b.w}</td></tr>`;
+        if(m.inn === 2) {
+            document.getElementById('ui-target-box').style.display = "block";
+            document.getElementById('ui-target').innerText = `Target: ${m.target} | Need: ${m.target - m.score}`;
         }
-        document.querySelector('#bwl-table tbody').innerHTML = boHtml;
+
+        let batH = ""; for(let p in m.stats.bat) if(m.stats.bat[p].inn === m.inn) batH += `<tr><td>${p}</td><td>${m.stats.bat[p].r}</td><td>${m.stats.bat[p].b}</td><td>${m.stats.bat[p].b>0?((m.stats.bat[p].r/m.stats.bat[p].b)*100).toFixed(0):0}</td></tr>`;
+        document.querySelector('#tbl-bat tbody').innerHTML = batH;
+
+        let bwlH = ""; for(let p in m.stats.bwl) if(m.stats.bwl[p].inn === m.inn) bwlH += `<tr><td>${p}</td><td>${Math.floor(m.stats.bwl[p].b/6)}.${m.stats.bwl[p].b%6}</td><td>${m.stats.bwl[p].r}</td><td>${m.stats.bwl[p].w}</td></tr>`;
+        document.querySelector('#tbl-bwl tbody').innerHTML = bwlH;
+    }
+
+    function checkResult() { if(m.inn === 2 && m.score >= m.target) { alert(m.batting + " WON!"); location.reload(); } }
+
+    function confirmFinish() {
+        if(m.inn === 1) {
+            alert("1st Innings Over! Target: " + (m.score + 1));
+            m.target = m.score + 1; m.inn = 2;
+            m.batting = m.teams.find(t => t !== m.batting);
+            m.score = 0; m.wickets = 0; m.balls = 0; m.lastBowler = "";
+            document.getElementById('setup-modal').style.display = 'flex';
+            document.getElementById('team-input-div').style.display = 'none';
+        } else {
+            alert("Match Finished!"); location.reload();
+        }
     }
 </script>
 </body>
