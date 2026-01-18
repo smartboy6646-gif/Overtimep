@@ -31,12 +31,11 @@
             position: relative;
         }
 
-        /* --- 1. HEADER (Adjusted Position) --- */
+        /* --- 1. HEADER --- */
         .tv-header {
             flex: 0 0 auto;
             background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
             color: white;
-            /* Added extra padding top to push score down */
             padding: 45px 20px 15px 20px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 10;
@@ -77,17 +76,47 @@
             align-items: center;
             gap: 15px;
         }
-        .this-over { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+
+        /* UPDATED: Ball History Row (Scrollable horizontally for 2 overs) */
+        .this-over-container {
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 5px;
+            text-align: center;
+            /* Hide scrollbar but keep functionality */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .this-over-container::-webkit-scrollbar { display: none; }
+
+        .this-over { 
+            display: inline-flex; 
+            gap: 8px; 
+            align-items: center; 
+            justify-content: center;
+            padding: 5px;
+        }
+        
         .ball-badge { 
-            width: 34px; height: 34px; 
+            width: 36px; height: 36px; 
             background: white; border: 1px solid #ccc; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
+            display: inline-flex; align-items: center; justify-content: center; 
             font-weight: bold; font-size: 0.95rem; color: #333;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
         .ball-w { background: var(--red); color: white; border: none; }
         .ball-4 { background: #e3f2fd; color: #0277bd; border-color: #0277bd; }
         .ball-6 { background: #fff3e0; color: #ef6c00; border-color: #ef6c00; }
+        
+        .over-separator {
+            width: 1px;
+            height: 30px;
+            background-color: #ccc;
+            margin: 0 5px;
+            flex-shrink: 0;
+        }
 
         .btn-action {
             background: #455a64; color: white; border: none; 
@@ -196,7 +225,11 @@
         </div>
 
         <div class="scroll-area">
-            <div class="this-over" id="list-balls"></div>
+            <div class="this-over-container">
+                <div class="this-over" id="list-balls">
+                    </div>
+            </div>
+
             <div style="flex:1"></div>
             
             <button class="btn-action" onclick="showScorecard()">
@@ -226,16 +259,16 @@
     <div id="setup" class="setup-screen">
         <h2 style="color:var(--primary); margin-bottom:30px">🏆 Match Setup</h2>
         <input type="text" id="t1-n" class="inp-team" placeholder="Team A Name" value="Team A">
-        <div id="pool-1" style="margin-bottom:15px; color:#666">Players: 0</div>
-        <input type="text" id="add-1" class="inp-team" placeholder="+ Add Player (Team A)">
-        <button onclick="addP(1)" class="btn-action" style="width:100%; margin-bottom:30px; background:#555">Add Player</button>
+        <div id="pool-1" style="margin-bottom:15px; color:#666; font-size:0.9rem">Players: 0</div>
+        <input type="text" id="add-1" class="inp-team" placeholder="e.g. Prakash, Ronnie, Ale...">
+        <button onclick="addP(1)" class="btn-action" style="width:100%; margin-bottom:30px; background:#555">Add Players</button>
 
         <hr style="margin:20px 0; border:none; border-top:1px solid #ddd">
 
         <input type="text" id="t2-n" class="inp-team" placeholder="Team B Name" value="Team B">
-        <div id="pool-2" style="margin-bottom:15px; color:#666">Players: 0</div>
-        <input type="text" id="add-2" class="inp-team" placeholder="+ Add Player (Team B)">
-        <button onclick="addP(2)" class="btn-action" style="width:100%; margin-bottom:30px; background:#555">Add Player</button>
+        <div id="pool-2" style="margin-bottom:15px; color:#666; font-size:0.9rem">Players: 0</div>
+        <input type="text" id="add-2" class="inp-team" placeholder="e.g. John, Wick, Neo...">
+        <button onclick="addP(2)" class="btn-action" style="width:100%; margin-bottom:30px; background:#555">Add Players</button>
 
         <button onclick="startToss()" class="btn-action" style="background:var(--green); width:100%; font-size:1.2rem; padding:16px; margin-top:20px">NEXT: TOSS &raquo;</button>
     </div>
@@ -257,18 +290,31 @@
         score: 0, wkts: 0, balls: 0,
         s: null, ns: null, b: null,
         stats: {}, 
-        overHist: [],
+        overHist: [], // Current Over Logic
+        prevOverHist: [], // Previous Over Logic for Display
         isMatchOver: false
     };
 
-    // --- SETUP ---
+    // --- SETUP (UPDATED FOR MULTIPLE NAMES) ---
     function addP(t) {
         let inp = document.getElementById(t===1?'add-1':'add-2');
-        let n = inp.value.trim();
-        if(!n) return;
+        let raw = inp.value;
+        if(!raw) return;
+
+        // Split by comma, trim spaces, remove empty
+        let names = raw.split(',').map(n => n.trim()).filter(n => n.length > 0);
         let arr = t===1 ? G.tA.p : G.tB.p;
-        if(arr.includes(n)) return alert("Player already exists!");
-        arr.push(n);
+
+        let addedCount = 0;
+        names.forEach(n => {
+            if(!arr.includes(n)) {
+                arr.push(n);
+                addedCount++;
+            }
+        });
+
+        if(addedCount === 0 && names.length > 0) alert("Players already exist!");
+
         inp.value = "";
         document.getElementById(t===1?'pool-1':'pool-2').innerText = "Players: " + arr.length + " (" + arr.join(", ") + ")";
     }
@@ -311,10 +357,9 @@
 
     // --- INNINGS FLOW ---
     function startNewInnings() {
-        // Reset current inning vars
-        G.score = 0; G.wkts = 0; G.balls = 0; G.overHist = [];
+        G.score = 0; G.wkts = 0; G.balls = 0; 
+        G.overHist = []; G.prevOverHist = []; // Reset history
         
-        // Batter Selection
         selectPlayer(`Select Striker (${G.bat.n})`, G.bat.p, (p1) => {
             G.s = p1;
             selectPlayer("Select Non-Striker", G.bat.p.filter(x=>x!==p1), (p2) => {
@@ -430,10 +475,9 @@
     }
 
     function nextBatter() {
-        checkWinCondition(); // Check if target met before out logic
+        checkWinCondition();
         if(G.isMatchOver) return;
 
-        // Check All Out
         if(G.wkts >= G.bat.p.length - 1) {
             handleInningsEnd("All Out");
             return;
@@ -453,7 +497,11 @@
     function checkOver() {
         if(G.balls%6===0 && G.balls>0) {
             swap();
-            G.overHist = [];
+            
+            // LOGIC CHANGE: Move current over to prev over, clear current
+            G.prevOverHist = [...G.overHist]; 
+            G.overHist = []; 
+            
             let avail = G.bowl.p.filter(p => p!==G.b);
             setTimeout(() => {
                 selectPlayer("Next Bowler", avail, (p) => {
@@ -477,11 +525,9 @@
         }
     }
 
-    // --- END OF INNINGS LOGIC (UPDATED) ---
     function handleInningsEnd(reason) {
         if(G.inn === 1) {
             G.target = G.score + 1;
-            // Show Innings Break Modal
             let html = `
                 <div class="res-title">Innings Break</div>
                 <div class="res-note">${reason}</div>
@@ -491,7 +537,6 @@
             `;
             showCustomModal(html);
         } else {
-            // Innings 2 End (Defeat/Draw)
             let result = "";
             if(G.score === G.target - 1) result = "Match Tied!";
             else result = G.bowl.n + " Won by " + (G.target - G.score - 1) + " runs!";
@@ -502,7 +547,7 @@
     function startSecondInnings() {
         closeModal();
         G.inn = 2;
-        [G.bat, G.bowl] = [G.bowl, G.bat]; // Swap Teams
+        [G.bat, G.bowl] = [G.bowl, G.bat];
         startNewInnings();
     }
 
@@ -515,12 +560,10 @@
             <button class="btn-outline" onclick="closeModal()">View Scorecard</button>
         `;
         showCustomModal(html);
-        
-        // Disable keys
         document.querySelectorAll('.key').forEach(k => k.disabled = true);
     }
 
-    // --- UI ---
+    // --- UI (UPDATED for Circle display) ---
     function updateUI() {
         document.getElementById('ui-inn').innerText = (G.inn===1 ? "1st" : "2nd") + " Innings";
         document.getElementById('ui-target').innerText = G.target ? ("Target: " + G.target) : "";
@@ -532,7 +575,6 @@
         let crr = G.balls>0 ? (G.score/(G.balls/6)).toFixed(1) : "0.0";
         document.getElementById('sc-crr').innerText = "CRR: " + crr;
 
-        // Players
         if(G.s) {
             let s = G.stats[G.s];
             document.getElementById('name-s').innerText = G.s + (s.out?"(out)":"");
@@ -551,19 +593,36 @@
             document.getElementById('stat-b').innerText = b.bw + "-" + b.br;
         }
 
-        // Balls
+        // --- UPDATED BALL RENDER LOGIC ---
         let ballDiv = document.getElementById('list-balls');
-        ballDiv.innerHTML = G.overHist.map(x => {
-            let cls = 'ball-badge';
-            if(x===4) cls+=' ball-4';
-            else if(x===6) cls+=' ball-6';
-            else if(String(x).includes('W')) cls+=' ball-w';
-            return `<div class="${cls}">${x}</div>`;
-        }).join('');
+        let html = "";
+        
+        // 1. Render Previous Over (if exists) with slightly faded style? 
+        // Or just normal. Let's do normal.
+        if (G.prevOverHist.length > 0) {
+             html += G.prevOverHist.map(x => makeBall(x)).join('');
+             html += `<div class="over-separator"></div>`; // The Line you asked for
+        }
+
+        // 2. Render Current Over
+        html += G.overHist.map(x => makeBall(x)).join('');
+        
+        ballDiv.innerHTML = html;
+        
+        // Scroll to end automatically
+        let container = document.querySelector('.this-over-container');
+        container.scrollLeft = container.scrollWidth;
+    }
+
+    function makeBall(x) {
+        let cls = 'ball-badge';
+        if(x===4) cls+=' ball-4';
+        else if(x===6) cls+=' ball-6';
+        else if(String(x).includes('W')) cls+=' ball-w';
+        return `<div class="${cls}">${x}</div>`;
     }
 
     function showScorecard() {
-        // Build Batting Table
         let h = `<h4>${G.bat.n} Batting</h4><table><tr><th>Name</th><th>R</th><th>B</th></tr>`;
         G.bat.p.forEach(p => {
             let s = G.stats[p];
@@ -573,7 +632,6 @@
         });
         h += `</table>`;
 
-        // Build Bowling Table
         h += `<h4>${G.bowl.n} Bowling</h4><table><tr><th>Name</th><th>W</th><th>R</th></tr>`;
         G.bowl.p.forEach(p => {
             let s = G.stats[p];
@@ -589,7 +647,6 @@
         document.getElementById('modal').style.display = 'flex';
     }
 
-    // --- UTILS ---
     function selectPlayer(title, list, cb) {
         openModal(title, list.map(p => ({ txt:p, fn:() => { closeModal(); cb(p); } })));
     }
@@ -612,7 +669,7 @@
     function showCustomModal(htmlContent) {
         document.getElementById('m-title').innerText = "";
         document.getElementById('m-body').innerHTML = htmlContent;
-        document.getElementById('m-close').style.display = 'none'; // hide close, force button use
+        document.getElementById('m-close').style.display = 'none';
         document.getElementById('modal').style.display = 'flex';
     }
 
